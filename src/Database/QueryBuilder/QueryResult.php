@@ -73,8 +73,8 @@ class QueryResult
      * @param array $items The items to be converted.
      * @return array The items converted to an array format.
      */
-    private function itemsToArray(array $items)
+    private function itemsToArray(array $items): array
     {
-        return array_map(fn ($result) => (array) $result, $items);
+        return array_map(fn ($result): array => (array) $result, $items);
     }
 }
