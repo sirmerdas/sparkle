@@ -68,6 +68,11 @@ class Builder
     private array $orders = [];
 
     /**
+     * @var string The column or expression used to group the query results.
+     */
+    private ?string $groupBy = null;
+
+    /**
      * Builder constructor.
      *
      * Initializes the query builder with the specified table and optional alias.
@@ -117,6 +122,17 @@ class Builder
     public function orderBy(string $column, string $direction = 'asc'): self
     {
         $this->orders[] = "`$column` $direction";
+        return $this;
+    }
+
+    /**
+     * Adds a GROUP BY clause to the query.
+     *
+     * @param string $column The name of the column to group the results by.
+     */
+    public function groupBy(string $column): self
+    {
+        $this->groupBy = $column;
         return $this;
     }
 
@@ -215,10 +231,11 @@ class Builder
     private function buildSelectQuery(): void
     {
         $query = sprintf(
-            "SELECT %s %s %s %s %s;",
+            "SELECT %s %s %s %s %s %s;",
             $this->selectColumns,
             $this->from,
             $this->buildWhereQuery(),
+            $this->buildGroupByQuery(),
             $this->buildOrderByQuery(),
             $this->buildLimitOffsetQuery(),
         );
@@ -291,6 +308,16 @@ class Builder
         $orders = implode(',', $this->orders);
 
         return " ORDER BY $orders";
+    }
+
+    /**
+     * Builds and returns the SQL query string for the GROUP BY clause.
+     *
+     * @return string|null The GROUP BY query string if applicable, or null if no grouping is defined.
+     */
+    public function buildGroupByQuery(): ?string
+    {
+        return $this->groupBy !== null ? "GROUP BY {$this->groupBy}" : null;
     }
 
     /**
