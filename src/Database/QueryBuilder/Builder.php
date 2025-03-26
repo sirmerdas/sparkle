@@ -335,7 +335,7 @@ class Builder
      *
      * @return string|null The GROUP BY query string if applicable, or null if no grouping is defined.
      */
-    public function buildGroupByQuery(): ?string
+    private function buildGroupByQuery(): ?string
     {
         return $this->groupBy !== null ? "GROUP BY {$this->groupBy}" : null;
     }
