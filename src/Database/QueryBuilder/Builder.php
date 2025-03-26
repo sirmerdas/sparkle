@@ -233,6 +233,42 @@ class Builder
     }
 
     /**
+     * Adds an "WHERE NOT IN" clause to the query.
+     *
+     * This method appends a condition to the query that checks if the values
+     * in the specified column are not within the given array of values, using
+     * an "OR" logical operator.
+     *
+     * @param string $column The name of the column to apply the condition to.
+     * @param array $values An array of values to exclude from the column.
+     */
+    public function whereNotIn(string $column, array $values): self
+    {
+        array_push($this->queryValue, ...$values);
+        $valuesPlaceHolder = trim(implode(', ', array_pad([], count($values), '?')));
+        $this->wheres[] = "`$column` NOT IN ($valuesPlaceHolder)";
+        return $this;
+    }
+
+    /**
+     * Adds an "OR WHERE NOT IN" clause to the query.
+     *
+     * This method appends a condition to the query that checks if the values
+     * in the specified column are not within the given array of values, using
+     * an "OR" logical operator.
+     *
+     * @param string $column The name of the column to apply the condition to.
+     * @param array $values An array of values to exclude from the column.
+     */
+    public function orWhereNotIn(string $column, array $values): self
+    {
+        array_push($this->queryValue, ...$values);
+        $valuesPlaceHolder = trim(implode(', ', array_pad([], count($values), '?')));
+        $this->orWheres[] = "`$column` NOT IN ($valuesPlaceHolder)";
+        return $this;
+    }
+
+    /**
      * Add a condition to check if a column is NOT NULL.
      *
      * @param string $column The column name.
