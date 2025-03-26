@@ -204,6 +204,33 @@ class Builder
         return $this;
     }
 
+    /**
+     * Adds a "WHERE IN" clause to the query.
+     *
+     * @param string $column The name of the column to apply the "WHERE IN" condition on.
+     * @param array $values An array of values to match against the column.
+     */
+    public function whereIn(string $column, array $values): self
+    {
+        array_push($this->queryValue, ...$values);
+        $valuesPlaceHolder = trim(implode(', ', array_pad([], count($values), '?')));
+        $this->wheres[] = "`$column` IN ($valuesPlaceHolder)";
+        return $this;
+    }
+
+    /**
+     * Adds a "OR WHERE IN" clause to the query.
+     *
+     * @param string $column The name of the column to apply the "WHERE IN" condition on.
+     * @param array $values An array of values to match against the column.
+     */
+    public function orWhereIn(string $column, array $values): self
+    {
+        array_push($this->queryValue, ...$values);
+        $valuesPlaceHolder = trim(implode(', ', array_pad([], count($values), '?')));
+        $this->orWheres[] = "`$column` IN ($valuesPlaceHolder)";
+        return $this;
+    }
 
     /**
      * Add a condition to check if a column is NOT NULL.
