@@ -165,7 +165,7 @@ class Builder
     public function where(string $column, string $operator, string $value): self
     {
         $this->queryValue[] = $value;
-        $this->wheres[] = "`$column`$operator?";
+        $this->wheres[] = "`$column` $operator ?";
         return $this;
     }
 
@@ -180,7 +180,7 @@ class Builder
     {
         if ($this->wheres !== []) {
             $this->queryValue[] = $value;
-            $this->orWheres[] = "`$column`$operator?";
+            $this->orWheres[] = "`$column` $operator ?";
         }
         return $this;
     }
