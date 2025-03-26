@@ -73,6 +73,11 @@ class Builder
     private ?string $groupBy = null;
 
     /**
+     * An array to store the conditions for the HAVING clause in a database query.
+     */
+    private array $having = [];
+
+    /**
      * Builder constructor.
      *
      * Initializes the query builder with the specified table and optional alias.
@@ -133,6 +138,20 @@ class Builder
     public function groupBy(string $column): self
     {
         $this->groupBy = $column;
+        return $this;
+    }
+
+    /**
+     * Add a "HAVING" clause to the query.
+     *
+     * @param string $column   The name of the column to apply the condition on.
+     * @param string $operator The comparison operator (e.g., '=', '>', '<', etc.).
+     * @param string $value    The value to compare the column against.
+     */
+    public function having(string $column, string $operator, string $value): self
+    {
+        $this->queryValue[] = $value;
+        $this->having[] = "`$column` $operator ?";
         return $this;
     }
 
@@ -231,11 +250,12 @@ class Builder
     private function buildSelectQuery(): void
     {
         $query = sprintf(
-            "SELECT %s %s %s %s %s %s;",
+            "SELECT %s %s %s %s %s %s %s;",
             $this->selectColumns,
             $this->from,
             $this->buildWhereQuery(),
             $this->buildGroupByQuery(),
+            $this->buildHavingQuery(),
             $this->buildOrderByQuery(),
             $this->buildLimitOffsetQuery(),
         );
@@ -318,6 +338,26 @@ class Builder
     public function buildGroupByQuery(): ?string
     {
         return $this->groupBy !== null ? "GROUP BY {$this->groupBy}" : null;
+    }
+
+    /**
+     * Builds the SQL query string for the HAVING clause.
+     *
+     * This method constructs and returns the HAVING clause of the SQL query
+     * based on the conditions specified in the query builder. If no conditions
+     * are set for the HAVING clause, it returns null.
+     *
+     * @return string|null The constructed HAVING clause as a string, or null if no conditions are set.
+     */
+    private function buildHavingQuery(): ?string
+    {
+        if ($this->having === []) {
+            return null;
+        }
+
+        $having = implode(' AND ', $this->having);
+
+        return " HAVING $having";
     }
 
     /**
