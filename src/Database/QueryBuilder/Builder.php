@@ -81,7 +81,7 @@ class Builder
     /**
      * List of allowed where operator
      */
-    private array $allowedWhereOperators = ['=', '>', '>', '!=', '<>', '>=', '<=', 'BETWEEN', 'LIKE', 'IN'];
+    private array $allowedWhereOperators = ['=', '>', '>', '!=', '<>', '>=', '<=', 'BETWEEN', 'LIKE', 'IN', 'ALL', 'AND', 'ANY', 'EXISTS', 'NOT', 'OR', 'SOME'];
 
     /**
      * Builder constructor.
