@@ -45,22 +45,22 @@ class Builder
     /**
      * @var PDO The PDO connection instance.
      */
-    private PDO $connection;
+    private PDO $pdo;
 
     /**
      * @var array The conditions for the WHERE clause.
      */
-    private array $wheres;
+    private array $wheres = [];
 
     /**
      * @var array The conditions for the OR WHERE clause.
      */
-    private array $orWheres;
+    private array $orWheres = [];
 
     /**
      * @var array The values to bind to the query placeholders.
      */
-    private array $queryValue;
+    private array $queryValue = [];
 
     /**
      * Builder constructor.
@@ -72,12 +72,9 @@ class Builder
      */
     public function __construct(string $table, string|null $as = null)
     {
-        $this->connection = Manager::$connection;
+        $this->pdo = Manager::$connection;
         $this->limit(0);
         $this->offset(0);
-        $this->wheres = [];
-        $this->orWheres = [];
-        $this->queryValue = [];
         $tableAs = $as ? "AS $as" : '';
         $this->from = "FROM $table $tableAs";
     }
@@ -86,7 +83,6 @@ class Builder
      * Set the LIMIT clause for the query.
      *
      * @param int $limit The maximum number of rows to return.
-     * @return self
      */
     public function limit(int $limit): self
     {
@@ -99,7 +95,6 @@ class Builder
      * Set the OFFSET clause for the query.
      *
      * @param int $offset The number of rows to skip.
-     * @return self
      */
     public function offset(int $offset): self
     {
@@ -114,7 +109,6 @@ class Builder
      * @param string $column The column name.
      * @param string $operator The comparison operator (e.g., '=', '<', '>').
      * @param string $value The value to compare against.
-     * @return self
      */
     public function where(string $column, string $operator, string $value): self
     {
@@ -129,11 +123,10 @@ class Builder
      * @param string $column The column name.
      * @param string $operator The comparison operator (e.g., '=', '<', '>').
      * @param string $value The value to compare against.
-     * @return self
      */
     public function orWhere(string $column, string $operator, string $value): self
     {
-        if (!empty($this->wheres)) {
+        if ($this->wheres !== []) {
             $this->queryValue[] = $value;
             $this->orWheres[] = "`$column`$operator?";
         }
@@ -144,7 +137,6 @@ class Builder
      * Add a condition to check if a column is NULL.
      *
      * @param string $column The column name.
-     * @return self
      */
     public function whereNull(string $column): self
     {
@@ -157,7 +149,6 @@ class Builder
      * Add a condition to check if a column is NOT NULL.
      *
      * @param string $column The column name.
-     * @return self
      */
     public function whereNotNull(string $column): self
     {
@@ -194,7 +185,6 @@ class Builder
      * Set the columns to be selected in the query.
      *
      * @param array $columns The columns to select.
-     * @return self
      */
     private function select(array $columns = ['*']): self
     {
@@ -204,10 +194,8 @@ class Builder
 
     /**
      * Build the complete SELECT query string.
-     *
-     * @return void
      */
-    private function buildSelectQuery()
+    private function buildSelectQuery(): void
     {
         $query = sprintf(
             "SELECT %s %s %s %s;",
@@ -241,7 +229,7 @@ class Builder
      */
     private function buildWhereQuery(): string|null
     {
-        if (empty($this->wheres)) {
+        if ($this->wheres === []) {
             return null;
         }
 
@@ -258,7 +246,7 @@ class Builder
      */
     private function buildOrWhereQuery(): string|null
     {
-        if (empty($this->orWheres)) {
+        if ($this->orWheres === []) {
             return null;
         }
 
@@ -274,23 +262,25 @@ class Builder
      */
     private function prepareQuery(): PDOStatement
     {
-        return $this->execute($this->connection->prepare($this->query));
+        return $this->execute($this->pdo->prepare($this->query));
     }
 
     /**
      * Execute the prepared statement with the bound values.
      *
-     * @param PDOStatement $statement The prepared statement.
+     * @param PDOStatement $pdoStatement The prepared statement.
      * @return PDOStatement The executed statement.
      * @throws SqlExecuteException If the query execution fails.
      */
-    private function execute(PDOStatement $statement): PDOStatement
+    private function execute(PDOStatement $pdoStatement): PDOStatement
     {
         try {
-            $statement->execute($this->queryValue);
-            return $statement;
+            $pdoStatement->execute($this->queryValue);
+            return $pdoStatement;
         } catch (Exception $e) {
-            Manager::$fileLogger && Manager::$logger->error($e->getMessage(), ['trace' => $e->getTrace()]);
+            if (Manager::$fileLogger) {
+                Manager::$logger->error($e->getMessage(), ['trace' => $e->getTrace()]);
+            }
             throw new SqlExecuteException($e->getMessage());
         }
     }
@@ -298,23 +288,23 @@ class Builder
     /**
      * Retrieve the first row from the executed statement.
      *
-     * @param PDOStatement $statement The executed statement.
+     * @param PDOStatement $pdoStatement The executed statement.
      * @return object|false The first row as an object, or false if no rows exist.
      */
-    private function getFirst(PDOStatement $statement)
+    private function getFirst(PDOStatement $pdoStatement): \stdClass|false
     {
-        return $statement->fetchObject();
+        return $pdoStatement->fetchObject();
     }
 
     /**
      * Retrieve all rows from the executed statement.
      *
-     * @param PDOStatement $statement The executed statement.
+     * @param PDOStatement $pdoStatement The executed statement.
      * @return QueryResult The result of the query.
      */
-    private function getAll(PDOStatement $statement)
+    private function getAll(PDOStatement $pdoStatement): \Sirmerdas\Sparkle\Database\QueryBuilder\QueryResult
     {
-        return $this->formatResult($statement->fetchAll(PDO::FETCH_OBJ), $statement->rowCount());
+        return $this->formatResult($pdoStatement->fetchAll(PDO::FETCH_OBJ), $pdoStatement->rowCount());
     }
 
     /**
