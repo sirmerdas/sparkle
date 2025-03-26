@@ -15,7 +15,7 @@ class Sparkle
      * @param string $connectionName The name of the database connection to switch to.
      * @return self A new instance of the current class.
      */
-    public static function changeDB(string $connectionName): self
+    public static function connection(string $connectionName): self
     {
         Manager::boot($connectionName);
         return new self();
