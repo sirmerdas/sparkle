@@ -63,6 +63,11 @@ class Builder
     private array $queryValue = [];
 
     /**
+     * @var array An array to store the order clauses for the query.
+     */
+    private array $orders = [];
+
+    /**
      * Builder constructor.
      *
      * Initializes the query builder with the specified table and optional alias.
@@ -100,6 +105,18 @@ class Builder
     {
         $this->offset = $offset;
 
+        return $this;
+    }
+
+    /**
+     * Adds an ORDER BY clause to the query.
+     *
+     * @param string $column The name of the column to sort by.
+     * @param string $order  The sorting direction, either 'asc' for ascending or 'desc' for descending. Defaults to 'asc'.
+     */
+    public function orderBy(string $column, string $direction = 'asc'): self
+    {
+        $this->orders[] = "`$column` $direction";
         return $this;
     }
 
@@ -198,10 +215,11 @@ class Builder
     private function buildSelectQuery(): void
     {
         $query = sprintf(
-            "SELECT %s %s %s %s;",
+            "SELECT %s %s %s %s %s;",
             $this->selectColumns,
             $this->from,
             $this->buildWhereQuery(),
+            $this->buildOrderByQuery(),
             $this->buildLimitOffsetQuery(),
         );
 
@@ -253,6 +271,26 @@ class Builder
         $orWhereRaw = implode(" OR ", $this->orWheres);
 
         return " OR $orWhereRaw";
+    }
+
+    /**
+     * Builds the SQL query string for the ORDER BY clause.
+     *
+     * This method constructs and returns the ORDER BY portion of an SQL query
+     * based on the current query builder state. If no ORDER BY conditions are
+     * specified, it returns null.
+     *
+     * @return string|null The ORDER BY SQL query string, or null if no conditions are set.
+     */
+    private function buildOrderByQuery(): ?string
+    {
+        if ($this->orders === []) {
+            return null;
+        }
+
+        $orders = implode(',', $this->orders);
+
+        return " ORDER BY $orders";
     }
 
     /**
