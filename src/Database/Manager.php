@@ -16,15 +16,10 @@ use Sirmerdas\Sparkle\{Enums\Database, Exceptions\ConnectionException};
 
 class Manager
 {
-    /**
-     * @var array
-     */
     public static array $connections;
 
     /**
      * active connection
-     *
-     * @var PDO|null
      */
     public static PDO|null $connection;
 
@@ -40,12 +35,12 @@ class Manager
 
     public function __construct(string|null $logPath = null)
     {
-        if ($logPath !== null && is_string($logPath) && !empty(is_string($logPath))) {
+        if ($logPath !== null && is_string($logPath) && is_string($logPath)) {
             static::$fileLogger = true;
             if (!static::$logger instanceof Logger) {
-                $log = new Logger('Database');
-                $log->pushHandler(new StreamHandler($logPath, Level::Warning));
-                static::$logger = $log;
+                $logger = new Logger('Database');
+                $logger->pushHandler(new StreamHandler($logPath, Level::Warning));
+                static::$logger = $logger;
             }
         }
     }
@@ -64,8 +59,6 @@ class Manager
      * @param string $connectionName The name to assign to this connection (default is 'default').
      *
      * @throws ConnectionException If the connection to the database fails.
-     *
-     * @return void
      */
     public function addConnection(Database $database, string $host, string $dbName, string $username, string $password, string $charset = 'utf8', array $pdoConnectionOptions = [], string $connectionName = 'default'): void
     {
@@ -81,14 +74,14 @@ class Manager
     /**
      * boot a connection
      *
-     * @param string $connectionName
      *
-     * @return void
      */
     public static function boot(string $connectionName = 'default'): void
     {
         if (!isset(static::$connections[$connectionName])) {
-            static::$fileLogger && static::$logger->critical("Connection {$connectionName} does not exists.");
+            if (static::$fileLogger) {
+                static::$logger->critical("Connection {$connectionName} does not exists.");
+            }
             throw new ConnectionException("Connection {$connectionName} does not exists.");
         }
 
@@ -96,7 +89,9 @@ class Manager
             $selectedConnection = static::$connections[$connectionName];
             static::$connection = new PDO($selectedConnection['dsn'], $selectedConnection['username'], $selectedConnection['password'], $selectedConnection['pdoOptions']);
         } catch (ConnectionException $e) {
-            static::$fileLogger && static::$logger->critical($e->getMessage(), ['trace' => $e->getTrace(), 'prev' => $e->getPrevious()]);
+            if (static::$fileLogger) {
+                static::$logger->critical($e->getMessage(), ['trace' => $e->getTrace(), 'prev' => $e->getPrevious()]);
+            }
             throw new ConnectionException("Failed to connect to database with provided credentials. Check log for more details.");
         }
 
