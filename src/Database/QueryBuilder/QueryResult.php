@@ -68,6 +68,14 @@ class QueryResult
     }
 
     /**
+     * Check if result has any items or not.
+     */
+    public function hasItems(): bool
+    {
+        return $this->rowCount > 0;
+    }
+
+    /**
      * Convert the items to an array format.
      *
      * @param array $items The items to be converted.
