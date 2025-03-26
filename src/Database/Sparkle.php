@@ -20,7 +20,7 @@ class Sparkle
         Manager::boot($connectionName);
         return new self();
     }
-    
+
     /**
      * Create a new Builder instance for the specified table.
      *
