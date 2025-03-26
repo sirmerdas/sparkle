@@ -305,6 +305,18 @@ class Builder
     }
 
     /**
+     * Get the total count of records for the current query.
+     *
+     * @return int The number of records matching the query.
+     */
+    public function count(): int
+    {
+        $this->select(columns: ['COUNT(*) AS count'])->buildSelectQuery();
+        $result = $this->getFirst($this->prepareQuery());
+        return intval($result?->count ?? 0);
+    }
+
+    /**
      * Validate of given operator is allowed or not.
      *
      */
