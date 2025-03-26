@@ -4,7 +4,7 @@ namespace Sirmerdas\Sparkle\Database;
 
 use Sirmerdas\Sparkle\Database\QueryBuilder\Builder;
 
-class Sparkle extends Manager
+class Sparkle
 {
     /**
      * Changes the database connection to the specified connection name.
@@ -17,7 +17,7 @@ class Sparkle extends Manager
      */
     public static function changeDB(string $connectionName): self
     {
-        parent::boot($connectionName);
+        Manager::boot($connectionName);
         return new self();
     }
     
