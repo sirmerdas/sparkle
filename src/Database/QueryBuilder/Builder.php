@@ -7,6 +7,7 @@ use PDO;
 use PDOStatement;
 use Sirmerdas\Sparkle\Database\Manager;
 use Sirmerdas\Sparkle\Exceptions\SqlExecuteException;
+use Sirmerdas\Sparkle\Exceptions\WhereOperatorException;
 
 /**
  * Class Builder
@@ -76,6 +77,11 @@ class Builder
      * An array to store the conditions for the HAVING clause in a database query.
      */
     private array $having = [];
+
+    /**
+     * List of allowed where operator
+     */
+    private array $allowedWhereOperators = ['=', '>', '>', '!=', '<>', '>=', '<=', 'BETWEEN', 'LIKE', 'IN'];
 
     /**
      * Builder constructor.
@@ -164,6 +170,7 @@ class Builder
      */
     public function where(string $column, string $operator, string $value): self
     {
+        $this->validateWhereOperator($operator);
         $this->queryValue[] = $value;
         $this->wheres[] = "`$column` $operator ?";
         return $this;
@@ -179,6 +186,7 @@ class Builder
     public function orWhere(string $column, string $operator, string $value): self
     {
         if ($this->wheres !== []) {
+            $this->validateWhereOperator($operator);
             $this->queryValue[] = $value;
             $this->orWheres[] = "`$column` $operator ?";
         }
@@ -231,6 +239,17 @@ class Builder
         $this->select($columns)->limit(1);
         $this->buildSelectQuery();
         return $this->getFirst($this->prepareQuery());
+    }
+
+    /**
+     * Validate of given operator is allowed or not.
+     *
+     */
+    private function validateWhereOperator(string $operator): void
+    {
+        if (!in_array(trim(strtoupper($operator)), $this->allowedWhereOperators)) {
+            throw new WhereOperatorException("Unsupported $operator operator!");
+        }
     }
 
     /**
