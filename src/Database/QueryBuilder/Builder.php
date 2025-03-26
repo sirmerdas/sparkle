@@ -317,6 +317,49 @@ class Builder
     }
 
     /**
+     * Execute a raw SQL select query with optional parameters.
+     *
+     * @param string $query The raw SQL query string to execute.
+     * @param array $params An optional array of parameters to bind to the query.
+     *                       Default is an empty array.
+     * @return mixed The result of the query execution, typically an array of results.
+     */
+    public function selectRaw(string $query, array $params = [])
+    {
+        $this->validateSelectQuery($query);
+        $prepareStatement = $this->pdo->prepare($query);
+        try {
+            $prepareStatement->execute($params);
+            return $prepareStatement->fetchAll(PDO::FETCH_OBJ);
+        } catch (Exception $e) {
+            if (Manager::$fileLogger) {
+                Manager::$logger->error($e->getMessage(), ['trace' => $e->getTrace()]);
+            }
+            throw new SqlExecuteException($e->getMessage());
+        }
+    }
+
+    /**
+     * Validates the given SQL SELECT query string.
+     *
+     * This method ensures that the provided query string adheres to the
+     * expected structure and syntax for a SELECT statement. If the query
+     * is invalid, an exception may be thrown or appropriate handling
+     * will occur.
+     *
+     * @param string $query The SQL SELECT query string to validate.
+     * 
+     * @return void
+     */
+    private function validateSelectQuery(string $query): void
+    {
+        $query = strtoupper($query);
+        if (str_contains($query, 'INSERT') || str_contains($query, 'UPDATE')) {
+            throw new Exception('Entered query is not valid select query.');
+        }
+    }
+
+    /**
      * Validate of given operator is allowed or not.
      *
      */
