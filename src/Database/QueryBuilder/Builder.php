@@ -6,9 +6,9 @@ use Exception;
 use PDO;
 use PDOStatement;
 use Sirmerdas\Sparkle\Database\Manager;
+use Sirmerdas\Sparkle\Enums\ComparisonOperator;
 use Sirmerdas\Sparkle\Enums\JoinType;
 use Sirmerdas\Sparkle\Exceptions\SqlExecuteException;
-use Sirmerdas\Sparkle\Exceptions\WhereOperatorException;
 
 /**
  * Class Builder
@@ -86,11 +86,6 @@ class Builder
      * to combine rows from two or more tables based on a related column.
      */
     private array $joins = [];
-
-    /**
-     * List of allowed where operator
-     */
-    private array $allowedWhereOperators = ['=', '>', '>', '!=', '<>', '>=', '<=', 'BETWEEN', 'LIKE', 'IN', 'ALL', 'AND', 'ANY', 'EXISTS', 'NOT', 'OR', 'SOME'];
 
     /**
      * Builder constructor.
@@ -171,33 +166,41 @@ class Builder
     }
 
     /**
-     * Add a condition to the WHERE clause.
+     * Adds a WHERE clause to the query.
      *
-     * @param string $column The column name.
-     * @param string $operator The comparison operator (e.g., '=', '<', '>').
-     * @param string $value The value to compare against.
+     * This method allows you to specify a condition for filtering results
+     * based on a column, a comparison operator, and a value.
+     *
+     * @param string $column The name of the column to apply the condition on.
+     * @param ComparisonOperator $comparisonOperator The operator to use for comparison (e.g., '=', '>', '<').
+     * @param string $value The value to compare the column against.
+     *
+     * @return self Returns the current instance of the query builder for method chaining.
      */
-    public function where(string $column, string $operator, string $value): self
+    public function where(string $column, ComparisonOperator $comparisonOperator, string $value): self
     {
-        $this->validateWhereOperator($operator);
         $this->queryValue[] = $value;
-        $this->wheres[] = "`$column` $operator ?";
+        $this->wheres[] = "`$column` {$comparisonOperator->value} ?";
         return $this;
     }
 
     /**
-     * Add a condition to the OR WHERE clause.
+     * Adds an "OR WHERE" condition to the query.
      *
-     * @param string $column The column name.
-     * @param string $operator The comparison operator (e.g., '=', '<', '>').
-     * @param string $value The value to compare against.
+     * This method appends a condition to the query using the logical "OR" operator.
+     * It allows specifying a column, a comparison operator, and a value to filter the results.
+     *
+     * @param string $column The name of the column to apply the condition on.
+     * @param ComparisonOperator $comparisonOperator The comparison operator to use (e.g., '=', '!=', '<', '>').
+     * @param string $value The value to compare the column against.
+     *
+     * @return self Returns the current instance of the query builder for method chaining.
      */
-    public function orWhere(string $column, string $operator, string $value): self
+    public function orWhere(string $column, ComparisonOperator $comparisonOperator, string $value): self
     {
         if ($this->wheres !== []) {
-            $this->validateWhereOperator($operator);
             $this->queryValue[] = $value;
-            $this->orWheres[] = "`$column` $operator ?";
+            $this->orWheres[] = "`$column` {$comparisonOperator->value} ?";
         }
         return $this;
     }
@@ -378,17 +381,6 @@ class Builder
         $query = strtoupper($query);
         if (str_contains($query, 'INSERT') || str_contains($query, 'UPDATE')) {
             throw new Exception('Entered query is not valid select query.');
-        }
-    }
-
-    /**
-     * Validate of given operator is allowed or not.
-     *
-     */
-    private function validateWhereOperator(string $operator): void
-    {
-        if (!in_array(trim(strtoupper($operator)), $this->allowedWhereOperators)) {
-            throw new WhereOperatorException("Unsupported $operator operator!");
         }
     }
 
