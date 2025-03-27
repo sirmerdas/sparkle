@@ -6,10 +6,9 @@ use Exception;
 use PDO;
 use PDOStatement;
 use Sirmerdas\Sparkle\Database\Manager;
-use Sirmerdas\Sparkle\Enums\ComparisonOperator;
-use Sirmerdas\Sparkle\Enums\JoinType;
+use Sirmerdas\Sparkle\Enums\{ComparisonOperator, JoinType};
 use Sirmerdas\Sparkle\Exceptions\SqlExecuteException;
-use Sirmerdas\Sparkle\Traits\{QueryComponents,QueryValidators};
+use Sirmerdas\Sparkle\Traits\{QueryComponents, QueryValidators};
 
 /**
  * Class Builder
