@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         bootstrap="vendor/autoload.php"
+         colors="true" 
+         backupGlobals="false" 
+         processIsolation="false" 
+         stopOnFailure="true"
+         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/11.1/phpunit.xsd" 
+         backupStaticProperties="false"
+        failOnRisky="true"
+        failOnWarning="true">
+    <testsuites>
+        <testsuite name="QueryBuilder">
+            <directory suffix=".php">tests/QueryBuilder</directory>
+        </testsuite>
+    </testsuites>
+</phpunit>
