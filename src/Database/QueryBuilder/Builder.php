@@ -22,6 +22,8 @@ class Builder
     use QueryComponents;
     use QueryValidators;
 
+    private string $table;
+
     /**
      * @var string The columns to be selected in the query.
      */
@@ -85,6 +87,8 @@ class Builder
      */
     private array $joins = [];
 
+    private array $insertKeys = [];
+
     /**
      * Builder constructor.
      *
@@ -99,6 +103,7 @@ class Builder
         $this->limit(0);
         $this->offset(0);
         $tableAs = $as ? "AS $as" : '';
+        $this->table = $table;
         $this->from = "FROM $table $tableAs";
     }
 
@@ -371,6 +376,33 @@ class Builder
     }
 
     /**
+     * Inserts a new record into the database.
+     *
+     * @param array $data An associative array where keys are column names and values are the corresponding data to insert.
+     * @return bool Returns `true` if at least one row was inserted successfully, otherwise `false`.
+     */
+    public function create(array $data): bool
+    {
+        $this->insertKeys = array_keys($data);
+        $this->queryValue = array_values($data);
+        return boolval($this->prepareQuery($this->buildInsertQuery())->rowCount() > 0);
+    }
+
+    /**
+     * Inserts a new record into the database and returns the last inserted ID.
+     *
+     * @param array $data An associative array where keys are column names and values are the corresponding data to insert.
+     * @return int The ID of the last inserted row.
+     */
+    public function createGetId(array $data): int
+    {
+        $this->insertKeys = array_keys($data);
+        $this->queryValue = array_values($data);
+        $this->prepareQuery($this->buildInsertQuery());
+        return intval($this->pdo->lastInsertId());
+    }
+
+    /**
      * Set the columns to be selected in the query.
      *
      * @param array $columns The columns to select.
@@ -396,6 +428,19 @@ class Builder
             $this->buildHavingQuery($this->having),
             $this->buildOrderByQuery($this->orders),
             $this->buildLimitOffsetQuery($this->limit, $this->offset),
+        );
+    }
+
+    /**
+     * Build the complete INSERT query string.
+     */
+    private function buildInsertQuery(): string
+    {
+        return sprintf(
+            "INSERT INTO `%s` (%s) VALUES (%s);",
+            $this->table,
+            $this->buildInsertColumnsQuery($this->insertKeys),
+            $this->buildInsertPlaceholder($this->insertKeys)
         );
     }
 

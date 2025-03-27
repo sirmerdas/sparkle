@@ -122,4 +122,26 @@ trait QueryComponents
 
         return implode('  ', $joins);
     }
+
+    /**
+     * Builds the column names portion of an INSERT query.
+     *
+     * @param array $insertColumns An array of column names to be inserted.
+     * @return string A formatted string of column names, e.g., "`column1`, `column2`, `column3`".
+     */
+    public function buildInsertColumnsQuery(array $insertColumns): string
+    {
+        return trim(implode(', ', array_map(fn ($item): string => "`$item`", $insertColumns)));
+    }
+
+    /**
+     * Builds the placeholder string for an INSERT query.
+     *
+     * @param array $insertColumns An array of column names to be inserted.
+     * @return string A formatted string of placeholders, e.g., "?, ?, ?" for three columns.
+     */
+    public function buildInsertPlaceholder(array $insertColumns): string
+    {
+        return trim(implode(', ', array_pad([], count($insertColumns), '?')));
+    }
 }
