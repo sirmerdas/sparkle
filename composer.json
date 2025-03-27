@@ -9,6 +9,9 @@
         "rector/rector": "^2.0"
     },
     "license": "MIT",
+    "scripts": {
+        "test":"vendor/bin/phpunit"
+    },
     "autoload": {
         "psr-4": {
             "Sirmerdas\\Sparkle\\": "src/"
