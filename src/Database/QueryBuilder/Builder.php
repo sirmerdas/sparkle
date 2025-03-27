@@ -329,8 +329,7 @@ class Builder
      */
     public function first(array $columns = ['*']): bool|object
     {
-        $this->select($columns)->limit(1);
-        $this->buildSelectQuery();
+        $this->select($columns)->limit(1)->buildSelectQuery();
         return $this->getFirst($this->prepareQuery());
     }
 
