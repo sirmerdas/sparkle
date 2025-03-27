@@ -43,11 +43,6 @@ class Builder
     private int $offset;
 
     /**
-     * @var string The complete SQL query string.
-     */
-    private string $query;
-
-    /**
      * @var PDO The PDO connection instance.
      */
     private PDO $pdo;
@@ -317,8 +312,7 @@ class Builder
      */
     public function get(array $columns = ['*']): QueryResult
     {
-        $this->select($columns)->buildSelectQuery();
-        return $this->getAll($this->prepareQuery());
+        return $this->getAll($this->prepareQuery($this->select($columns)->buildSelectQuery()));
     }
 
     /**
@@ -329,8 +323,7 @@ class Builder
      */
     public function first(array $columns = ['*']): bool|object
     {
-        $this->select($columns)->limit(1)->buildSelectQuery();
-        return $this->getFirst($this->prepareQuery());
+        return $this->getFirst($this->prepareQuery($this->select($columns)->limit(1)->buildSelectQuery()));
     }
 
     /**
@@ -340,8 +333,7 @@ class Builder
      */
     public function count(): int
     {
-        $this->select(columns: ['COUNT(*) AS count'])->buildSelectQuery();
-        $result = $this->getFirst($this->prepareQuery());
+        $result = $this->getFirst($this->prepareQuery($this->select(columns: ['COUNT(*) AS count'])->buildSelectQuery()));
         return intval($result?->count ?? 0);
     }
 
@@ -392,9 +384,9 @@ class Builder
     /**
      * Build the complete SELECT query string.
      */
-    private function buildSelectQuery(): void
+    private function buildSelectQuery(): string
     {
-        $query = sprintf(
+        return sprintf(
             "SELECT %s %s %s %s %s %s %s %s;",
             $this->selectColumns,
             $this->from,
@@ -405,8 +397,6 @@ class Builder
             $this->buildOrderByQuery($this->orders),
             $this->buildLimitOffsetQuery($this->limit, $this->offset),
         );
-
-        $this->query = $query;
     }
 
     /**
@@ -414,9 +404,9 @@ class Builder
      *
      * @return PDOStatement The prepared statement.
      */
-    private function prepareQuery(): PDOStatement
+    private function prepareQuery(string $query): PDOStatement
     {
-        return $this->execute($this->pdo->prepare($this->query));
+        return $this->execute($this->pdo->prepare($query));
     }
 
     /**
