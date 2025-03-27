@@ -348,7 +348,7 @@ class Builder
      *                       Default is an empty array.
      * @return mixed The result of the query execution, typically an array of results.
      */
-    public function selectRaw(string $query, array $params = [])
+    public function selectRaw(string $query, array $params = []): array
     {
         $this->validateSelectQuery($query);
         $prepareStatement = $this->pdo->prepare($query);
@@ -372,8 +372,6 @@ class Builder
      * will occur.
      *
      * @param string $query The SQL SELECT query string to validate.
-     * 
-     * @return void
      */
     private function validateSelectQuery(string $query): void
     {
