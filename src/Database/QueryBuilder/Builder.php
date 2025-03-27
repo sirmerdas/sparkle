@@ -6,6 +6,7 @@ use Exception;
 use PDO;
 use PDOStatement;
 use Sirmerdas\Sparkle\Database\Manager;
+use Sirmerdas\Sparkle\Enums\JoinType;
 use Sirmerdas\Sparkle\Exceptions\SqlExecuteException;
 use Sirmerdas\Sparkle\Exceptions\WhereOperatorException;
 
@@ -77,6 +78,14 @@ class Builder
      * An array to store the conditions for the HAVING clause in a database query.
      */
     private array $having = [];
+
+    /**
+     * An array that stores the join clauses for the query.
+     *
+     * Each element in the array represents a join clause, which can be used
+     * to combine rows from two or more tables based on a related column.
+     */
+    private array $joins = [];
 
     /**
      * List of allowed where operator
@@ -280,6 +289,21 @@ class Builder
     }
 
     /**
+     * Adds a join clause to the query.
+     *
+     * @param string $targetTable The name of the table to join with.
+     * @param string $leftColumn The column from the current table to use in the join condition.
+     * @param string $operator The operator to use in the join condition (e.g., '=', '<', '>').
+     * @param string $rightColumn The column from the target table to use in the join condition.
+     * @param JoinType $joinType The type of join to perform (e.g., INNER, LEFT, RIGHT). Defaults to INNER.
+     */
+    public function join(string $targetTable, string $leftColumn, string $operator, string $rightColumn, JoinType $joinType = JoinType::INNER): self
+    {
+        $this->joins[] = "{$joinType->value} JOIN `$targetTable` ON $leftColumn $operator $rightColumn";
+        return $this;
+    }
+
+    /**
      * Execute the query and retrieve all matching rows.
      *
      * @param array $columns The columns to select (default is all columns).
@@ -387,9 +411,10 @@ class Builder
     private function buildSelectQuery(): void
     {
         $query = sprintf(
-            "SELECT %s %s %s %s %s %s %s;",
+            "SELECT %s %s %s %s %s %s %s %s;",
             $this->selectColumns,
             $this->from,
+            $this->buildJoinQuery(),
             $this->buildWhereQuery(),
             $this->buildGroupByQuery(),
             $this->buildHavingQuery(),
@@ -495,6 +520,24 @@ class Builder
         $having = implode(' AND ', $this->having);
 
         return " HAVING $having";
+    }
+
+    /**
+     * Builds and returns the SQL query string for JOIN clauses.
+     *
+     * This method constructs the JOIN portion of an SQL query based on the
+     * current state of the query builder. If no JOIN clauses are defined,
+     * it returns null.
+     *
+     * @return string|null The SQL JOIN query string, or null if no JOIN clauses exist.
+     */
+    private function buildJoinQuery(): ?string
+    {
+        if ($this->joins === []) {
+            return null;
+        }
+
+        return implode('  ', $this->joins);
     }
 
     /**
