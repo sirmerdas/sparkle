@@ -344,6 +344,16 @@ class Builder
     }
 
     /**
+     * Determine if any records exist for the current query.
+     *
+     * @return bool True if records exist, false otherwise.
+     */
+    public function exists(): bool
+    {
+        return boolval($this->count() > 0);
+    }
+
+    /**
      * Execute a raw SQL select query with optional parameters.
      *
      * @param string $query The raw SQL query string to execute.
