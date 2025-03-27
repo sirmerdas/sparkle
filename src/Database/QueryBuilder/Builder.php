@@ -9,6 +9,7 @@ use Sirmerdas\Sparkle\Database\Manager;
 use Sirmerdas\Sparkle\Enums\ComparisonOperator;
 use Sirmerdas\Sparkle\Enums\JoinType;
 use Sirmerdas\Sparkle\Exceptions\SqlExecuteException;
+use Sirmerdas\Sparkle\Traits\QueryComponents;
 
 /**
  * Class Builder
@@ -19,6 +20,8 @@ use Sirmerdas\Sparkle\Exceptions\SqlExecuteException;
  */
 class Builder
 {
+    use QueryComponents;
+
     /**
      * @var string The columns to be selected in the query.
      */
@@ -414,130 +417,15 @@ class Builder
             "SELECT %s %s %s %s %s %s %s %s;",
             $this->selectColumns,
             $this->from,
-            $this->buildJoinQuery(),
-            $this->buildWhereQuery(),
-            $this->buildGroupByQuery(),
-            $this->buildHavingQuery(),
-            $this->buildOrderByQuery(),
-            $this->buildLimitOffsetQuery(),
+            $this->buildJoinQuery($this->joins),
+            $this->buildWhereQuery($this->wheres, $this->orWheres),
+            $this->buildGroupByQuery($this->groupBy),
+            $this->buildHavingQuery($this->having),
+            $this->buildOrderByQuery($this->orders),
+            $this->buildLimitOffsetQuery($this->limit, $this->offset),
         );
 
         $this->query = $query;
-    }
-
-    /**
-     * Build the LIMIT and OFFSET clause for the query.
-     *
-     * @return string|null The LIMIT and OFFSET clause, or null if not set.
-     */
-    private function buildLimitOffsetQuery(): string|null
-    {
-        if ($this->limit > 0 && $this->offset >= 0) {
-            return sprintf("LIMIT %s OFFSET %s", $this->limit, $this->offset);
-        }
-
-        return null;
-    }
-
-    /**
-     * Build the WHERE clause for the query.
-     *
-     * @return string|null The WHERE clause, or null if no conditions are set.
-     */
-    private function buildWhereQuery(): string|null
-    {
-        if ($this->wheres === []) {
-            return null;
-        }
-
-        $whereRaw = implode(" AND ", $this->wheres);
-        $orWhereQuery = $this->buildOrWhereQuery();
-
-        return "WHERE $whereRaw $orWhereQuery";
-    }
-
-    /**
-     * Build the OR WHERE clause for the query.
-     *
-     * @return string|null The OR WHERE clause, or null if no conditions are set.
-     */
-    private function buildOrWhereQuery(): string|null
-    {
-        if ($this->orWheres === []) {
-            return null;
-        }
-
-        $orWhereRaw = implode(" OR ", $this->orWheres);
-
-        return " OR $orWhereRaw";
-    }
-
-    /**
-     * Builds the SQL query string for the ORDER BY clause.
-     *
-     * This method constructs and returns the ORDER BY portion of an SQL query
-     * based on the current query builder state. If no ORDER BY conditions are
-     * specified, it returns null.
-     *
-     * @return string|null The ORDER BY SQL query string, or null if no conditions are set.
-     */
-    private function buildOrderByQuery(): ?string
-    {
-        if ($this->orders === []) {
-            return null;
-        }
-
-        $orders = implode(',', $this->orders);
-
-        return " ORDER BY $orders";
-    }
-
-    /**
-     * Builds and returns the SQL query string for the GROUP BY clause.
-     *
-     * @return string|null The GROUP BY query string if applicable, or null if no grouping is defined.
-     */
-    private function buildGroupByQuery(): ?string
-    {
-        return $this->groupBy !== null ? "GROUP BY {$this->groupBy}" : null;
-    }
-
-    /**
-     * Builds the SQL query string for the HAVING clause.
-     *
-     * This method constructs and returns the HAVING clause of the SQL query
-     * based on the conditions specified in the query builder. If no conditions
-     * are set for the HAVING clause, it returns null.
-     *
-     * @return string|null The constructed HAVING clause as a string, or null if no conditions are set.
-     */
-    private function buildHavingQuery(): ?string
-    {
-        if ($this->having === []) {
-            return null;
-        }
-
-        $having = implode(' AND ', $this->having);
-
-        return " HAVING $having";
-    }
-
-    /**
-     * Builds and returns the SQL query string for JOIN clauses.
-     *
-     * This method constructs the JOIN portion of an SQL query based on the
-     * current state of the query builder. If no JOIN clauses are defined,
-     * it returns null.
-     *
-     * @return string|null The SQL JOIN query string, or null if no JOIN clauses exist.
-     */
-    private function buildJoinQuery(): ?string
-    {
-        if ($this->joins === []) {
-            return null;
-        }
-
-        return implode('  ', $this->joins);
     }
 
     /**
