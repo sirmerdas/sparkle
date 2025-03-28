@@ -9,9 +9,6 @@ class Sparkle
     /**
      * Changes the database connection to the specified connection name.
      *
-     * This method initializes the parent class with the given connection name
-     * and returns a new instance of the current class.
-     *
      * @param string $connectionName The name of the database connection to switch to.
      * @return self A new instance of the current class.
      */
