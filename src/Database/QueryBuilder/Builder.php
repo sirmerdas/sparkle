@@ -403,6 +403,18 @@ class Builder
     }
 
     /**
+     * Updates records in the database with the provided data.
+     *
+     * @param array $data An associative array of column-value pairs to update.
+     * @return int The number of affected rows.
+     */
+    public function update(array $data): int
+    {
+        $this->queryValue = [...array_values($data), ...$this->queryValue];
+        return $this->prepareQuery($this->buildUpdateQuery($data))->rowCount();
+    }
+
+    /**
      * Set the columns to be selected in the query.
      *
      * @param array $columns The columns to select.
@@ -442,6 +454,22 @@ class Builder
             $this->table,
             $this->buildInsertColumnsQuery($this->insertKeys),
             $this->buildInsertPlaceholder($this->insertKeys)
+        );
+    }
+
+    /**
+     * Build the complete UPDATE query string.
+     */
+    private function buildUpdateQuery(array $updateData): string
+    {
+        return sprintf(
+            "UPDATE `%s` %s %s %s %s %s;",
+            $this->table,
+            $this->buildJoinQuery($this->joins),
+            $this->buildUpdateQueryPlaceholder($updateData),
+            $this->buildWhereQuery($this->wheres, $this->orWheres),
+            $this->buildOrderByQuery($this->orders),
+            $this->buildLimitOffsetQuery($this->limit, $this->offset),
         );
     }
 

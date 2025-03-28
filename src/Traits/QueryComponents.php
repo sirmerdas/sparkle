@@ -173,4 +173,18 @@ trait QueryComponents
         $needsBacktick = $this->needsBacktick($column);
         return implode('.', array_map(fn ($item): string => $needsBacktick ? "`$item`" : $item, explode('.', $column)));
     }
+
+    /**
+     * Builds the placeholder SQL string for an UPDATE query.
+     *
+     * This method generates a SQL `SET` clause with placeholders for prepared statements.
+     *
+     * @param array $updateColumns An associative array where keys are column names and values are new values.
+     * @return string The formatted `SET` clause for an SQL UPDATE statement.
+     */
+    public function buildUpdateQueryPlaceholder(array $updateColumns): string
+    {
+        $columns = array_map(fn ($item): string => "{$this->quoteColumn($item)} = ?", array_keys($updateColumns));
+        return "SET " . implode(' ,', $columns);
+    }
 }
