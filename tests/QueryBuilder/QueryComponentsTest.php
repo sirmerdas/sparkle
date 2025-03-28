@@ -66,4 +66,10 @@ final class QueryComponentsTest extends TestCase
         $this->assertEquals("`order`.`customerNumber`", $this->quoteColumn("order.customerNumber"));
         $this->assertEquals("customers.CustomerNumber", $this->quoteColumn("customers.CustomerNumber"));
     }
+
+    public function test_build_update_query_placeholder(): void
+    {
+        $this->assertEquals('SET orderNumber = ?', $this->buildUpdateQueryPlaceholder(['orderNumber' => '123123']));
+        $this->assertEquals('SET `order`.`status` = ?', $this->buildUpdateQueryPlaceholder(['order.status' => 'cancelled']));
+    }
 }
