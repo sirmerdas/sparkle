@@ -144,4 +144,33 @@ trait QueryComponents
     {
         return trim(implode(', ', array_pad([], count($insertColumns), '?')));
     }
+
+    /**
+     * Checks if the given column name contains a reserved SQL keyword
+     * that requires backticks for proper quoting.
+     *
+     * @param string $column The column name (or a dot-separated path to a nested column).
+     *
+     * @return bool Returns true if the column name contains a reserved keyword that requires backticks; false otherwise.
+     */
+    private function needsBacktick(string $column): bool
+    {
+        $reservedKeywords = ["order", "group", "select", "from", "where", "limit", "offset", "join", "inner", "outer", "left", "right", "on", "desc", "asc"];
+        $columnParts = explode('.', $column);
+        return array_intersect($reservedKeywords, $columnParts) !== [];
+    }
+
+    /**
+     * Quotes the column name if needed by surrounding reserved SQL keywords
+     * with backticks.
+     *
+     * @param string $column The column name (or a dot-separated path to a nested column) to be quoted.
+     *
+     * @return string The quoted column name with backticks around any reserved SQL keywords, or the column name unmodified if no backticks are needed.
+     */
+    public function quoteColumn(string $column): string
+    {
+        $needsBacktick = $this->needsBacktick($column);
+        return implode('.', array_map(fn ($item): string => $needsBacktick ? "`$item`" : $item, explode('.', $column)));
+    }
 }
