@@ -139,7 +139,7 @@ class Builder
      */
     public function orderBy(string $column, string $direction = 'asc'): self
     {
-        $this->orders[] = "`$column` $direction";
+        $this->orders[] = "{$this->quoteColumn($column)} $direction";
         return $this;
     }
 
@@ -150,7 +150,7 @@ class Builder
      */
     public function groupBy(string $column): self
     {
-        $this->groupBy = $column;
+        $this->groupBy = $this->quoteColumn($column);
         return $this;
     }
 
@@ -164,7 +164,7 @@ class Builder
     public function having(string $column, string $operator, string $value): self
     {
         $this->queryValue[] = $value;
-        $this->having[] = "`$column` $operator ?";
+        $this->having[] = "{$this->quoteColumn($column)} $operator ?";
         return $this;
     }
 
@@ -183,7 +183,7 @@ class Builder
     public function where(string $column, ComparisonOperator $comparisonOperator, string $value): self
     {
         $this->queryValue[] = $value;
-        $this->wheres[] = "`$column` {$comparisonOperator->value} ?";
+        $this->wheres[] = "{$this->quoteColumn($column)} {$comparisonOperator->value} ?";
         return $this;
     }
 
@@ -203,7 +203,7 @@ class Builder
     {
         if ($this->wheres !== []) {
             $this->queryValue[] = $value;
-            $this->orWheres[] = "`$column` {$comparisonOperator->value} ?";
+            $this->orWheres[] = "{$this->quoteColumn($column)} {$comparisonOperator->value} ?";
         }
         return $this;
     }
@@ -215,7 +215,7 @@ class Builder
      */
     public function whereNull(string $column): self
     {
-        $this->wheres[] = "$column IS NULL";
+        $this->wheres[] = "{$this->quoteColumn($column)} IS NULL";
         return $this;
     }
 
@@ -229,7 +229,7 @@ class Builder
     {
         array_push($this->queryValue, ...$values);
         $valuesPlaceHolder = trim(implode(', ', array_pad([], count($values), '?')));
-        $this->wheres[] = "`$column` IN ($valuesPlaceHolder)";
+        $this->wheres[] = "{$this->quoteColumn($column)} IN ($valuesPlaceHolder)";
         return $this;
     }
 
@@ -243,7 +243,7 @@ class Builder
     {
         array_push($this->queryValue, ...$values);
         $valuesPlaceHolder = trim(implode(', ', array_pad([], count($values), '?')));
-        $this->orWheres[] = "`$column` IN ($valuesPlaceHolder)";
+        $this->orWheres[] = "{$this->quoteColumn($column)} IN ($valuesPlaceHolder)";
         return $this;
     }
 
@@ -261,7 +261,7 @@ class Builder
     {
         array_push($this->queryValue, ...$values);
         $valuesPlaceHolder = trim(implode(', ', array_pad([], count($values), '?')));
-        $this->wheres[] = "`$column` NOT IN ($valuesPlaceHolder)";
+        $this->wheres[] = "{$this->quoteColumn($column)} NOT IN ($valuesPlaceHolder)";
         return $this;
     }
 
@@ -279,7 +279,7 @@ class Builder
     {
         array_push($this->queryValue, ...$values);
         $valuesPlaceHolder = trim(implode(', ', array_pad([], count($values), '?')));
-        $this->orWheres[] = "`$column` NOT IN ($valuesPlaceHolder)";
+        $this->orWheres[] = "{$this->quoteColumn($column)} NOT IN ($valuesPlaceHolder)";
         return $this;
     }
 
@@ -290,7 +290,7 @@ class Builder
      */
     public function whereNotNull(string $column): self
     {
-        $this->wheres[] = "$column IS NOT NULL";
+        $this->wheres[] = "{$this->quoteColumn($column)} IS NOT NULL";
         return $this;
     }
 
@@ -409,6 +409,7 @@ class Builder
      */
     private function select(array $columns = ['*']): self
     {
+        $columns = array_map(fn ($item): string => $this->quoteColumn($item), $columns);
         $this->selectColumns = implode(', ', $columns);
         return $this;
     }

@@ -54,4 +54,16 @@ final class QueryComponentsTest extends TestCase
     {
         $this->assertEquals("?, ?, ?", $this->buildInsertPlaceholder(["name", "email", "password"]));
     }
+
+    public function test_needs_backtick(): void
+    {
+        $this->assertEquals(true, $this->needsBacktick("order.customerNumber"));
+        $this->assertEquals(false, $this->needsBacktick("customers.CustomerNumber"));
+    }
+
+    public function tests_quote_column(): void
+    {
+        $this->assertEquals("`order`.`customerNumber`", $this->quoteColumn("order.customerNumber"));
+        $this->assertEquals("customers.CustomerNumber", $this->quoteColumn("customers.CustomerNumber"));
+    }
 }
