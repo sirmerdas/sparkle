@@ -452,6 +452,28 @@ class Builder extends PdoManager
     }
 
     /**
+     * Execute a raw SQL update query with optional parameters.
+     *
+     * @param string $query The raw SQL query string to execute.
+     * @param array $params An array of parameters to bind to the query.
+     * @return int The result of the query execution.
+     */
+    public function updateRaw(string $query, array $params): int
+    {
+        $this->validateUpdateQuery($query);
+        $prepareStatement = $this->pdo->prepare($query);
+        try {
+            $prepareStatement->execute($params);
+            return $prepareStatement->rowCount();
+        } catch (Exception $e) {
+            if (Manager::$fileLogger) {
+                Manager::$logger->error($e->getMessage(), ['trace' => $e->getTrace()]);
+            }
+            throw new SqlExecuteException($e->getMessage());
+        }
+    }
+
+    /**
      * Deletes records from the database based on the provided conditions.
      *
      * @param array $delete  An array of column names to delete from the table.
