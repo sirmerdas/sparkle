@@ -502,6 +502,37 @@ class Builder extends PdoManager
     }
 
     /**
+     * Executes a raw SQL query with optional parameters and returns the results.
+     *
+     * @param string $query The SQL query to be executed.
+     * @param array $params Optional parameters to bind to the query.
+     *
+     * @return array Contains:
+     *               - 'items' (array): The fetched results as objects.
+     *               - 'rowCount' (int): The number of affected rows.
+     *               - 'lastInsertId' (string|bool): The last inserted ID if applicable.
+     *
+     * @throws SqlExecuteException If the query execution fails.
+     */
+    public function raw(string $query, array $params = []): array
+    {
+        $pdoStatement = $this->pdoPrepare($query);
+        try {
+            $pdoStatement->execute($params);
+            return [
+                'items' => $pdoStatement->fetchAll(PDO::FETCH_OBJ),
+                'rowCount' => $pdoStatement->rowCount(),
+                'lastInsertId' => $this->pdoLastInsertId(),
+            ];
+        } catch (Exception $e) {
+            if (Manager::$fileLogger) {
+                Manager::$logger->error($e->getMessage(), ['trace' => $e->getTrace()]);
+            }
+            throw new SqlExecuteException($e->getMessage());
+        }
+    }
+
+    /**
      * Set the columns to be selected in the query.
      *
      * @param array $columns The columns to select.
