@@ -123,6 +123,30 @@ class PdoManager
     }
 
     /**
+     * Executes a database transaction.
+     *
+     * @param callable $transactions The callback function containing database operations to execute within the transaction.
+     *
+     * @throws SqlExecuteException If the transaction fails and an exception occurs.
+     */
+    protected function pdoTransaction(callable $transactions): void
+    {
+        $pdo = $this->pdo;
+        $pdo->beginTransaction();
+
+        try {
+            $transactions();
+            $pdo->commit();
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            if (Manager::$fileLogger) {
+                Manager::$logger->error($e->getMessage(), ['trace' => $e->getTrace()]);
+            }
+            throw new SqlExecuteException($e->getMessage());
+        }
+    }
+
+    /**
      * Format the query result into a QueryResult object.
      *
      * @param array $queryResult The fetched rows as an array of objects.

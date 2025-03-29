@@ -533,6 +533,17 @@ class Builder extends PdoManager
     }
 
     /**
+     * Executes a set of database operations within a transaction.
+     *
+     * @param callable $transactions A callback function that receives a copied instance of the builder
+     *                               and executes database operations within the transaction.
+     */
+    public function transaction(callable $transactions): void
+    {
+        $this->pdoTransaction(fn () => $transactions($this->copy()));
+    }
+
+    /**
      * Set the columns to be selected in the query.
      *
      * @param array $columns The columns to select.
