@@ -314,6 +314,29 @@ class Builder extends PdoManager
     }
 
     /**
+     * Execute a raw SQL select query with optional parameters.
+     *
+     * @param string $query The raw SQL query string to execute.
+     * @param array $params An optional array of parameters to bind to the query.
+     *                       Default is an empty array.
+     * @return mixed The result of the query execution, typically an array of results.
+     */
+    public function selectRaw(string $query, array $params = []): array
+    {
+        $this->validateSelectQuery($query);
+        $prepareStatement = $this->pdo->prepare($query);
+        try {
+            $prepareStatement->execute($params);
+            return $prepareStatement->fetchAll(PDO::FETCH_OBJ);
+        } catch (Exception $e) {
+            if (Manager::$fileLogger) {
+                Manager::$logger->error($e->getMessage(), ['trace' => $e->getTrace()]);
+            }
+            throw new SqlExecuteException($e->getMessage());
+        }
+    }
+
+    /**
      * Execute the query and retrieve the first matching row.
      *
      * @param array $columns The columns to select (default is all columns).
@@ -346,27 +369,18 @@ class Builder extends PdoManager
     }
 
     /**
-     * Execute a raw SQL select query with optional parameters.
+     * Inserts a new record into the database.
      *
-     * @param string $query The raw SQL query string to execute.
-     * @param array $params An optional array of parameters to bind to the query.
-     *                       Default is an empty array.
-     * @return mixed The result of the query execution, typically an array of results.
+     * @param array $data An associative array where keys are column names and values are the corresponding data to insert.
+     * @return bool Returns `true` if at least one row was inserted successfully, otherwise `false`.
      */
-    public function selectRaw(string $query, array $params = []): array
+    public function create(array $data): bool
     {
-        $this->validateSelectQuery($query);
-        $prepareStatement = $this->pdo->prepare($query);
-        try {
-            $prepareStatement->execute($params);
-            return $prepareStatement->fetchAll(PDO::FETCH_OBJ);
-        } catch (Exception $e) {
-            if (Manager::$fileLogger) {
-                Manager::$logger->error($e->getMessage(), ['trace' => $e->getTrace()]);
-            }
-            throw new SqlExecuteException($e->getMessage());
-        }
+        $this->insertKeys = array_keys($data);
+        $this->setQueryValue(array_values($data), false);
+        return boolval($this->prepareAndExecuteQuery($this->buildInsertQuery())->rowCount() > 0);
     }
+
 
     /**
      * Execute a raw SQL insert query with optional parameters.
@@ -388,41 +402,6 @@ class Builder extends PdoManager
             }
             throw new SqlExecuteException($e->getMessage());
         }
-    }
-
-    /**
-     * Execute a raw SQL delete query with optional parameters.
-     *
-     * @param string $query The raw SQL query string to execute.
-     * @param array $params An array of parameters to bind to the query.
-     * @return int The result of the query execution.
-     */
-    public function deleteRaw(string $query, array $params): int
-    {
-        $this->validateDeleteQuery($query);
-        $prepareStatement = $this->pdo->prepare($query);
-        try {
-            $prepareStatement->execute($params);
-            return $prepareStatement->rowCount();
-        } catch (Exception $e) {
-            if (Manager::$fileLogger) {
-                Manager::$logger->error($e->getMessage(), ['trace' => $e->getTrace()]);
-            }
-            throw new SqlExecuteException($e->getMessage());
-        }
-    }
-
-    /**
-     * Inserts a new record into the database.
-     *
-     * @param array $data An associative array where keys are column names and values are the corresponding data to insert.
-     * @return bool Returns `true` if at least one row was inserted successfully, otherwise `false`.
-     */
-    public function create(array $data): bool
-    {
-        $this->insertKeys = array_keys($data);
-        $this->setQueryValue(array_values($data), false);
-        return boolval($this->prepareAndExecuteQuery($this->buildInsertQuery())->rowCount() > 0);
     }
 
     /**
@@ -487,6 +466,30 @@ class Builder extends PdoManager
         $delete = array_map(fn ($item): string => $this->quoteColumn($item), $delete);
         return $this->prepareAndExecuteQuery($this->buildDeleteQuery(implode(', ', $delete)))->rowCount();
     }
+
+
+    /**
+     * Execute a raw SQL delete query with optional parameters.
+     *
+     * @param string $query The raw SQL query string to execute.
+     * @param array $params An array of parameters to bind to the query.
+     * @return int The result of the query execution.
+     */
+    public function deleteRaw(string $query, array $params): int
+    {
+        $this->validateDeleteQuery($query);
+        $prepareStatement = $this->pdo->prepare($query);
+        try {
+            $prepareStatement->execute($params);
+            return $prepareStatement->rowCount();
+        } catch (Exception $e) {
+            if (Manager::$fileLogger) {
+                Manager::$logger->error($e->getMessage(), ['trace' => $e->getTrace()]);
+            }
+            throw new SqlExecuteException($e->getMessage());
+        }
+    }
+
 
     /**
      * Creates a copy of the current Builder instance.
