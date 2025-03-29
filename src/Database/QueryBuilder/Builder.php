@@ -87,6 +87,10 @@ class Builder
      */
     private array $joins = [];
 
+    /**
+     * An array which keep new values column name.
+     *
+     */
     private array $insertKeys = [];
 
     /**
