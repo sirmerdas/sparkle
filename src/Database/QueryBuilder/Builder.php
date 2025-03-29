@@ -415,6 +415,21 @@ class Builder
     }
 
     /**
+     * Deletes records from the database based on the provided conditions.
+     *
+     * @param array $delete  An array of column names to delete from the table.
+     *                       Required when using joins.
+     *
+     * @return int The number of rows affected by the delete operation.
+     *
+     */
+    public function delete(array $delete = []): int
+    {
+        $delete = array_map(fn ($item): string => $this->quoteColumn($item), $delete);
+        return $this->prepareQuery($this->buildDeleteQuery(implode(', ', $delete)))->rowCount();
+    }
+
+    /**
      * Set the columns to be selected in the query.
      *
      * @param array $columns The columns to select.
@@ -470,6 +485,23 @@ class Builder
             $this->buildWhereQuery($this->wheres, $this->orWheres),
             $this->buildOrderByQuery($this->orders),
             $this->buildLimitOffsetQuery($this->limit, $this->offset),
+        );
+    }
+
+
+    /**
+     * Build the complete DELETE query string.
+     */
+    private function buildDeleteQuery(string $delete): string
+    {
+        return sprintf(
+            "DELETE %s FROM %s %s %s %s %s;",
+            $delete,
+            $this->table,
+            $this->buildJoinQuery($this->joins),
+            $this->buildWhereQuery($this->wheres, $this->orWheres),
+            $this->buildOrderByQuery($this->orders),
+            $delete === '' || $delete === '0' ? $this->buildLimitForDeleteQuery($this->limit) : null,
         );
     }
 

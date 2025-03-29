@@ -187,4 +187,24 @@ trait QueryComponents
         $columns = array_map(fn ($item): string => "{$this->quoteColumn($item)} = ?", array_keys($updateColumns));
         return "SET " . implode(' ,', $columns);
     }
+
+    /**
+     * Builds the LIMIT clause for a DELETE query.
+     *
+     * This method generates the `LIMIT` clause for the `DELETE` query if the
+     * provided limit is greater than 0. If the limit is not positive, it returns
+     * `null` to omit the `LIMIT` clause from the query.
+     *
+     * @param int $limit The maximum number of rows to delete.
+     *
+     * @return string|null The `LIMIT` clause for the DELETE query or `null` if no limit is applied.
+     */
+    public function buildLimitForDeleteQuery(int $limit): ?string
+    {
+        if ($limit > 0) {
+            return sprintf("LIMIT %s", $limit);
+        }
+
+        return null;
+    }
 }
