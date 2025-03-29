@@ -369,6 +369,28 @@ class Builder extends PdoManager
     }
 
     /**
+     * Execute a raw SQL insert query with optional parameters.
+     *
+     * @param string $query The raw SQL query string to execute.
+     * @param array $params An array of parameters to bind to the query.
+     * @return mixed The result of the query execution, typically an array of results.
+     */
+    public function createRaw(string $query, array $params): bool|string
+    {
+        $this->validateInsertQuery($query);
+        $prepareStatement = $this->pdo->prepare($query);
+        try {
+            $prepareStatement->execute($params);
+            return $this->pdo->lastInsertId();
+        } catch (Exception $e) {
+            if (Manager::$fileLogger) {
+                Manager::$logger->error($e->getMessage(), ['trace' => $e->getTrace()]);
+            }
+            throw new SqlExecuteException($e->getMessage());
+        }
+    }
+
+    /**
      * Inserts a new record into the database.
      *
      * @param array $data An associative array where keys are column names and values are the corresponding data to insert.
