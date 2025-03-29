@@ -373,7 +373,7 @@ class Builder extends PdoManager
      *
      * @param string $query The raw SQL query string to execute.
      * @param array $params An array of parameters to bind to the query.
-     * @return mixed The result of the query execution, typically an array of results.
+     * @return mixed The result of the query execution.
      */
     public function createRaw(string $query, array $params): bool|string
     {
