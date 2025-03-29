@@ -324,7 +324,7 @@ class Builder extends PdoManager
     public function selectRaw(string $query, array $params = []): array
     {
         $this->validateSelectQuery($query);
-        $prepareStatement = $this->pdo->prepare($query);
+        $prepareStatement = $this->pdoPrepare($query);
         try {
             $prepareStatement->execute($params);
             return $prepareStatement->fetchAll(PDO::FETCH_OBJ);
@@ -389,13 +389,13 @@ class Builder extends PdoManager
      * @param array $params An array of parameters to bind to the query.
      * @return mixed The result of the query execution.
      */
-    public function createRaw(string $query, array $params): bool|string
+    public function createRaw(string $query, array $params): int
     {
         $this->validateInsertQuery($query);
-        $prepareStatement = $this->pdo->prepare($query);
+        $prepareStatement = $this->pdoPrepare($query);
         try {
             $prepareStatement->execute($params);
-            return $this->pdo->lastInsertId();
+            return intval($this->pdoLastInsertId());
         } catch (Exception $e) {
             if (Manager::$fileLogger) {
                 Manager::$logger->error($e->getMessage(), ['trace' => $e->getTrace()]);
@@ -415,7 +415,7 @@ class Builder extends PdoManager
         $this->insertKeys = array_keys($data);
         $this->setQueryValue(array_values($data), false);
         $this->prepareAndExecuteQuery($this->buildInsertQuery());
-        return intval($this->pdo->lastInsertId());
+        return intval($this->pdoLastInsertId());
     }
 
     /**
@@ -440,7 +440,7 @@ class Builder extends PdoManager
     public function updateRaw(string $query, array $params): int
     {
         $this->validateUpdateQuery($query);
-        $prepareStatement = $this->pdo->prepare($query);
+        $prepareStatement = $this->pdoPrepare($query);
         try {
             $prepareStatement->execute($params);
             return $prepareStatement->rowCount();
@@ -478,7 +478,7 @@ class Builder extends PdoManager
     public function deleteRaw(string $query, array $params): int
     {
         $this->validateDeleteQuery($query);
-        $prepareStatement = $this->pdo->prepare($query);
+        $prepareStatement = $this->pdoPrepare($query);
         try {
             $prepareStatement->execute($params);
             return $prepareStatement->rowCount();

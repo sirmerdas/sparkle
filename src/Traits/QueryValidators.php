@@ -1,4 +1,5 @@
 <?php
+
 // This approach is not very safe and it's temporary until I find better approach.
 
 namespace Sirmerdas\Sparkle\Traits;
