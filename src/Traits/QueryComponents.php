@@ -170,8 +170,10 @@ trait QueryComponents
      */
     public function quoteColumn(string $column): string
     {
-        $needsBacktick = $this->needsBacktick($column);
-        return implode('.', array_map(fn ($item): string => $needsBacktick ? "`$item`" : $item, explode('.', $column)));
+        $columnExploded = explode(' ', $column);
+        $needsBacktick = $this->needsBacktick($columnExploded[0]);
+        $columnExploded[0] = implode('.', array_map(fn ($item): string => $needsBacktick ? "`$item`" : $item, explode('.', $columnExploded[0])));
+        return implode(' ', $columnExploded);
     }
 
     /**
