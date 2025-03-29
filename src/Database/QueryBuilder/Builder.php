@@ -423,6 +423,16 @@ class Builder extends PdoManager
     }
 
     /**
+     * Creates a copy of the current Builder instance.
+     *
+     * @return Builder A new instance of the Builder class with the same property values.
+     */
+    public function copy(): Builder
+    {
+        return clone $this;
+    }
+
+    /**
      * Set the columns to be selected in the query.
      *
      * @param array $columns The columns to select.
