@@ -314,6 +314,29 @@ class Builder extends PdoManager
     }
 
     /**
+     * Execute a raw SQL select query with optional parameters.
+     *
+     * @param string $query The raw SQL query string to execute.
+     * @param array $params An optional array of parameters to bind to the query.
+     *                       Default is an empty array.
+     * @return mixed The result of the query execution, typically an array of results.
+     */
+    public function selectRaw(string $query, array $params = []): array
+    {
+        $this->validateSelectQuery($query);
+        $prepareStatement = $this->pdoPrepare($query);
+        try {
+            $prepareStatement->execute($params);
+            return $prepareStatement->fetchAll(PDO::FETCH_OBJ);
+        } catch (Exception $e) {
+            if (Manager::$fileLogger) {
+                Manager::$logger->error($e->getMessage(), ['trace' => $e->getTrace()]);
+            }
+            throw new SqlExecuteException($e->getMessage());
+        }
+    }
+
+    /**
      * Execute the query and retrieve the first matching row.
      *
      * @param array $columns The columns to select (default is all columns).
@@ -346,29 +369,6 @@ class Builder extends PdoManager
     }
 
     /**
-     * Execute a raw SQL select query with optional parameters.
-     *
-     * @param string $query The raw SQL query string to execute.
-     * @param array $params An optional array of parameters to bind to the query.
-     *                       Default is an empty array.
-     * @return mixed The result of the query execution, typically an array of results.
-     */
-    public function selectRaw(string $query, array $params = []): array
-    {
-        $this->validateSelectQuery($query);
-        $prepareStatement = $this->pdo->prepare($query);
-        try {
-            $prepareStatement->execute($params);
-            return $prepareStatement->fetchAll(PDO::FETCH_OBJ);
-        } catch (Exception $e) {
-            if (Manager::$fileLogger) {
-                Manager::$logger->error($e->getMessage(), ['trace' => $e->getTrace()]);
-            }
-            throw new SqlExecuteException($e->getMessage());
-        }
-    }
-
-    /**
      * Inserts a new record into the database.
      *
      * @param array $data An associative array where keys are column names and values are the corresponding data to insert.
@@ -379,6 +379,29 @@ class Builder extends PdoManager
         $this->insertKeys = array_keys($data);
         $this->setQueryValue(array_values($data), false);
         return boolval($this->prepareAndExecuteQuery($this->buildInsertQuery())->rowCount() > 0);
+    }
+
+
+    /**
+     * Execute a raw SQL insert query with optional parameters.
+     *
+     * @param string $query The raw SQL query string to execute.
+     * @param array $params An array of parameters to bind to the query.
+     * @return mixed The result of the query execution.
+     */
+    public function createRaw(string $query, array $params): int
+    {
+        $this->validateInsertQuery($query);
+        $prepareStatement = $this->pdoPrepare($query);
+        try {
+            $prepareStatement->execute($params);
+            return intval($this->pdoLastInsertId());
+        } catch (Exception $e) {
+            if (Manager::$fileLogger) {
+                Manager::$logger->error($e->getMessage(), ['trace' => $e->getTrace()]);
+            }
+            throw new SqlExecuteException($e->getMessage());
+        }
     }
 
     /**
@@ -392,7 +415,7 @@ class Builder extends PdoManager
         $this->insertKeys = array_keys($data);
         $this->setQueryValue(array_values($data), false);
         $this->prepareAndExecuteQuery($this->buildInsertQuery());
-        return intval($this->pdo->lastInsertId());
+        return intval($this->pdoLastInsertId());
     }
 
     /**
@@ -405,6 +428,28 @@ class Builder extends PdoManager
     {
         $this->setQueryValue([...array_values($data), ...$this->getQueryValue()], false);
         return $this->prepareAndExecuteQuery($this->buildUpdateQuery($data))->rowCount();
+    }
+
+    /**
+     * Execute a raw SQL update query with optional parameters.
+     *
+     * @param string $query The raw SQL query string to execute.
+     * @param array $params An array of parameters to bind to the query.
+     * @return int The result of the query execution.
+     */
+    public function updateRaw(string $query, array $params): int
+    {
+        $this->validateUpdateQuery($query);
+        $prepareStatement = $this->pdoPrepare($query);
+        try {
+            $prepareStatement->execute($params);
+            return $prepareStatement->rowCount();
+        } catch (Exception $e) {
+            if (Manager::$fileLogger) {
+                Manager::$logger->error($e->getMessage(), ['trace' => $e->getTrace()]);
+            }
+            throw new SqlExecuteException($e->getMessage());
+        }
     }
 
     /**
@@ -422,6 +467,30 @@ class Builder extends PdoManager
         return $this->prepareAndExecuteQuery($this->buildDeleteQuery(implode(', ', $delete)))->rowCount();
     }
 
+
+    /**
+     * Execute a raw SQL delete query with optional parameters.
+     *
+     * @param string $query The raw SQL query string to execute.
+     * @param array $params An array of parameters to bind to the query.
+     * @return int The result of the query execution.
+     */
+    public function deleteRaw(string $query, array $params): int
+    {
+        $this->validateDeleteQuery($query);
+        $prepareStatement = $this->pdoPrepare($query);
+        try {
+            $prepareStatement->execute($params);
+            return $prepareStatement->rowCount();
+        } catch (Exception $e) {
+            if (Manager::$fileLogger) {
+                Manager::$logger->error($e->getMessage(), ['trace' => $e->getTrace()]);
+            }
+            throw new SqlExecuteException($e->getMessage());
+        }
+    }
+
+
     /**
      * Creates a copy of the current Builder instance.
      *
@@ -430,6 +499,37 @@ class Builder extends PdoManager
     public function copy(): Builder
     {
         return clone $this;
+    }
+
+    /**
+     * Executes a raw SQL query with optional parameters and returns the results.
+     *
+     * @param string $query The SQL query to be executed.
+     * @param array $params Optional parameters to bind to the query.
+     *
+     * @return array Contains:
+     *               - 'items' (array): The fetched results as objects.
+     *               - 'rowCount' (int): The number of affected rows.
+     *               - 'lastInsertId' (string|bool): The last inserted ID if applicable.
+     *
+     * @throws SqlExecuteException If the query execution fails.
+     */
+    public function raw(string $query, array $params = []): array
+    {
+        $pdoStatement = $this->pdoPrepare($query);
+        try {
+            $pdoStatement->execute($params);
+            return [
+                'items' => $pdoStatement->fetchAll(PDO::FETCH_OBJ),
+                'rowCount' => $pdoStatement->rowCount(),
+                'lastInsertId' => $this->pdoLastInsertId(),
+            ];
+        } catch (Exception $e) {
+            if (Manager::$fileLogger) {
+                Manager::$logger->error($e->getMessage(), ['trace' => $e->getTrace()]);
+            }
+            throw new SqlExecuteException($e->getMessage());
+        }
     }
 
     /**

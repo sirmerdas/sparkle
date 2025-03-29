@@ -2,7 +2,7 @@
 
 namespace Sirmerdas\Sparkle\Database;
 
-use Sirmerdas\Sparkle\Database\{Manager,QueryBuilder\QueryResult};
+use Sirmerdas\Sparkle\Database\{Manager, QueryBuilder\QueryResult};
 use Sirmerdas\Sparkle\Exceptions\SqlExecuteException;
 use Exception;
 use PDO;
@@ -13,7 +13,7 @@ class PdoManager
     /**
      * @var PDO The PDO connection instance.
      */
-    protected PDO $pdo;
+    private PDO $pdo;
 
     /**
      * @var array The values to bind to the query placeholders.
@@ -101,6 +101,25 @@ class PdoManager
         }
 
         return $this;
+    }
+
+    /**
+     * Prepares an SQL statement for execution using PDO.
+     *
+     * @param string $query The SQL query to prepare.
+     * @return bool|PDOStatement Returns a PDOStatement object if successful, or false on failure.
+     */
+    protected function pdoPrepare(string $query): bool|PDOStatement
+    {
+        return $this->pdo->prepare($query);
+    }
+
+    /**
+     * Retrieves the ID of the last inserted row.
+     */
+    protected function pdoLastInsertId(): bool|string
+    {
+        return $this->pdo->lastInsertId();
     }
 
     /**
