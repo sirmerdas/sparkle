@@ -72,4 +72,10 @@ final class QueryComponentsTest extends TestCase
         $this->assertEquals('SET orderNumber = ?', $this->buildUpdateQueryPlaceholder(['orderNumber' => '123123']));
         $this->assertEquals('SET `order`.`status` = ?', $this->buildUpdateQueryPlaceholder(['order.status' => 'cancelled']));
     }
+
+    public function test_build_limit_for_delete_query(): void
+    {
+        $this->assertEquals("LIMIT 10", $this->buildLimitForDeleteQuery(10));
+        $this->assertNull($this->buildLimitForDeleteQuery(0));
+    }
 }
