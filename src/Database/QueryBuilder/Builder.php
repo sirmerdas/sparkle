@@ -321,7 +321,7 @@ class Builder
      */
     public function get(array $columns = ['*']): QueryResult
     {
-        return $this->getAll($this->prepareQuery($this->select($columns)->buildSelectQuery()));
+        return $this->getAll($this->prepareAndExecuteQuery($this->select($columns)->buildSelectQuery()));
     }
 
     /**
@@ -332,7 +332,7 @@ class Builder
      */
     public function first(array $columns = ['*']): bool|object
     {
-        return $this->getFirst($this->prepareQuery($this->select($columns)->limit(1)->buildSelectQuery()));
+        return $this->getFirst($this->prepareAndExecuteQuery($this->select($columns)->limit(1)->buildSelectQuery()));
     }
 
     /**
@@ -342,7 +342,7 @@ class Builder
      */
     public function count(): int
     {
-        $result = $this->getFirst($this->prepareQuery($this->select(columns: ['COUNT(*) AS count'])->buildSelectQuery()));
+        $result = $this->getFirst($this->prepareAndExecuteQuery($this->select(columns: ['COUNT(*) AS count'])->buildSelectQuery()));
         return intval($result?->count ?? 0);
     }
 
@@ -389,7 +389,7 @@ class Builder
     {
         $this->insertKeys = array_keys($data);
         $this->queryValue = array_values($data);
-        return boolval($this->prepareQuery($this->buildInsertQuery())->rowCount() > 0);
+        return boolval($this->prepareAndExecuteQuery($this->buildInsertQuery())->rowCount() > 0);
     }
 
     /**
@@ -402,7 +402,7 @@ class Builder
     {
         $this->insertKeys = array_keys($data);
         $this->queryValue = array_values($data);
-        $this->prepareQuery($this->buildInsertQuery());
+        $this->prepareAndExecuteQuery($this->buildInsertQuery());
         return intval($this->pdo->lastInsertId());
     }
 
@@ -415,7 +415,7 @@ class Builder
     public function update(array $data): int
     {
         $this->queryValue = [...array_values($data), ...$this->queryValue];
-        return $this->prepareQuery($this->buildUpdateQuery($data))->rowCount();
+        return $this->prepareAndExecuteQuery($this->buildUpdateQuery($data))->rowCount();
     }
 
     /**
@@ -430,7 +430,7 @@ class Builder
     public function delete(array $delete = []): int
     {
         $delete = array_map(fn ($item): string => $this->quoteColumn($item), $delete);
-        return $this->prepareQuery($this->buildDeleteQuery(implode(', ', $delete)))->rowCount();
+        return $this->prepareAndExecuteQuery($this->buildDeleteQuery(implode(', ', $delete)))->rowCount();
     }
 
     /**
@@ -514,7 +514,7 @@ class Builder
      *
      * @return PDOStatement The prepared statement.
      */
-    private function prepareQuery(string $query): PDOStatement
+    private function prepareAndExecuteQuery(string $query): PDOStatement
     {
         return $this->execute($this->pdo->prepare($query));
     }
