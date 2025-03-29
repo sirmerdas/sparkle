@@ -4,8 +4,7 @@ namespace Sirmerdas\Sparkle\Database\QueryBuilder;
 
 use Exception;
 use PDO;
-use PDOStatement;
-use Sirmerdas\Sparkle\Database\Manager;
+use Sirmerdas\Sparkle\Database\{Manager, PdoManager};
 use Sirmerdas\Sparkle\Enums\{ComparisonOperator, JoinType};
 use Sirmerdas\Sparkle\Exceptions\SqlExecuteException;
 use Sirmerdas\Sparkle\Traits\{QueryComponents, QueryValidators};
@@ -17,7 +16,7 @@ use Sirmerdas\Sparkle\Traits\{QueryComponents, QueryValidators};
  *
  * @package Sirmerdas\Sparkle
  */
-class Builder
+class Builder extends PdoManager
 {
     use QueryComponents;
     use QueryValidators;
@@ -45,11 +44,6 @@ class Builder
     private int $offset;
 
     /**
-     * @var PDO The PDO connection instance.
-     */
-    private PDO $pdo;
-
-    /**
      * @var array The conditions for the WHERE clause.
      */
     private array $wheres = [];
@@ -58,11 +52,6 @@ class Builder
      * @var array The conditions for the OR WHERE clause.
      */
     private array $orWheres = [];
-
-    /**
-     * @var array The values to bind to the query placeholders.
-     */
-    private array $queryValue = [];
 
     /**
      * @var array An array to store the order clauses for the query.
@@ -103,7 +92,7 @@ class Builder
      */
     public function __construct(string $table, string|null $as = null)
     {
-        $this->pdo = Manager::$connection;
+        parent::__construct(Manager::$connection);
         $this->limit(0);
         $this->offset(0);
         $tableAs = $as ? "AS $as" : '';
@@ -167,7 +156,7 @@ class Builder
      */
     public function having(string $column, string $operator, string $value): self
     {
-        $this->queryValue[] = $value;
+        $this->setQueryValue($value);
         $this->having[] = "{$this->quoteColumn($column)} $operator ?";
         return $this;
     }
@@ -186,7 +175,7 @@ class Builder
      */
     public function where(string $column, ComparisonOperator $comparisonOperator, string $value): self
     {
-        $this->queryValue[] = $value;
+        $this->setQueryValue($value);
         $this->wheres[] = "{$this->quoteColumn($column)} {$comparisonOperator->value} ?";
         return $this;
     }
@@ -206,7 +195,7 @@ class Builder
     public function orWhere(string $column, ComparisonOperator $comparisonOperator, string $value): self
     {
         if ($this->wheres !== []) {
-            $this->queryValue[] = $value;
+            $this->setQueryValue($value);
             $this->orWheres[] = "{$this->quoteColumn($column)} {$comparisonOperator->value} ?";
         }
         return $this;
@@ -231,7 +220,7 @@ class Builder
      */
     public function whereIn(string $column, array $values): self
     {
-        array_push($this->queryValue, ...$values);
+        $this->setQueryValue($values, true, true);
         $valuesPlaceHolder = trim(implode(', ', array_pad([], count($values), '?')));
         $this->wheres[] = "{$this->quoteColumn($column)} IN ($valuesPlaceHolder)";
         return $this;
@@ -245,7 +234,7 @@ class Builder
      */
     public function orWhereIn(string $column, array $values): self
     {
-        array_push($this->queryValue, ...$values);
+        $this->setQueryValue($values, true, true);
         $valuesPlaceHolder = trim(implode(', ', array_pad([], count($values), '?')));
         $this->orWheres[] = "{$this->quoteColumn($column)} IN ($valuesPlaceHolder)";
         return $this;
@@ -263,7 +252,7 @@ class Builder
      */
     public function whereNotIn(string $column, array $values): self
     {
-        array_push($this->queryValue, ...$values);
+        $this->setQueryValue($values, true, true);
         $valuesPlaceHolder = trim(implode(', ', array_pad([], count($values), '?')));
         $this->wheres[] = "{$this->quoteColumn($column)} NOT IN ($valuesPlaceHolder)";
         return $this;
@@ -281,7 +270,7 @@ class Builder
      */
     public function orWhereNotIn(string $column, array $values): self
     {
-        array_push($this->queryValue, ...$values);
+        $this->setQueryValue($values, true, true);
         $valuesPlaceHolder = trim(implode(', ', array_pad([], count($values), '?')));
         $this->orWheres[] = "{$this->quoteColumn($column)} NOT IN ($valuesPlaceHolder)";
         return $this;
@@ -388,7 +377,7 @@ class Builder
     public function create(array $data): bool
     {
         $this->insertKeys = array_keys($data);
-        $this->queryValue = array_values($data);
+        $this->setQueryValue(array_values($data), false);
         return boolval($this->prepareAndExecuteQuery($this->buildInsertQuery())->rowCount() > 0);
     }
 
@@ -401,7 +390,7 @@ class Builder
     public function createGetId(array $data): int
     {
         $this->insertKeys = array_keys($data);
-        $this->queryValue = array_values($data);
+        $this->setQueryValue(array_values($data), false);
         $this->prepareAndExecuteQuery($this->buildInsertQuery());
         return intval($this->pdo->lastInsertId());
     }
@@ -414,7 +403,7 @@ class Builder
      */
     public function update(array $data): int
     {
-        $this->queryValue = [...array_values($data), ...$this->queryValue];
+        $this->setQueryValue([...array_values($data), ...$this->getQueryValue()], false);
         return $this->prepareAndExecuteQuery($this->buildUpdateQuery($data))->rowCount();
     }
 
@@ -508,69 +497,4 @@ class Builder
             $delete === '' || $delete === '0' ? $this->buildLimitForDeleteQuery($this->limit) : null,
         );
     }
-
-    /**
-     * Prepare the SQL query for execution.
-     *
-     * @return PDOStatement The prepared statement.
-     */
-    private function prepareAndExecuteQuery(string $query): PDOStatement
-    {
-        return $this->execute($this->pdo->prepare($query));
-    }
-
-    /**
-     * Execute the prepared statement with the bound values.
-     *
-     * @param PDOStatement $pdoStatement The prepared statement.
-     * @return PDOStatement The executed statement.
-     * @throws SqlExecuteException If the query execution fails.
-     */
-    private function execute(PDOStatement $pdoStatement): PDOStatement
-    {
-        try {
-            $pdoStatement->execute($this->queryValue);
-            return $pdoStatement;
-        } catch (Exception $e) {
-            if (Manager::$fileLogger) {
-                Manager::$logger->error($e->getMessage(), ['trace' => $e->getTrace()]);
-            }
-            throw new SqlExecuteException($e->getMessage());
-        }
-    }
-
-    /**
-     * Retrieve the first row from the executed statement.
-     *
-     * @param PDOStatement $pdoStatement The executed statement.
-     * @return object|false The first row as an object, or false if no rows exist.
-     */
-    private function getFirst(PDOStatement $pdoStatement): \stdClass|false
-    {
-        return $pdoStatement->fetchObject();
-    }
-
-    /**
-     * Retrieve all rows from the executed statement.
-     *
-     * @param PDOStatement $pdoStatement The executed statement.
-     * @return QueryResult The result of the query.
-     */
-    private function getAll(PDOStatement $pdoStatement): \Sirmerdas\Sparkle\Database\QueryBuilder\QueryResult
-    {
-        return $this->formatResult($pdoStatement->fetchAll(PDO::FETCH_OBJ), $pdoStatement->rowCount());
-    }
-
-    /**
-     * Format the query result into a QueryResult object.
-     *
-     * @param array $queryResult The fetched rows as an array of objects.
-     * @param int $rowCount The number of rows returned by the query.
-     * @return QueryResult The formatted query result.
-     */
-    private function formatResult(array $queryResult, int $rowCount): QueryResult
-    {
-        return new QueryResult($rowCount ?? 0, $queryResult ?? []);
-    }
-
 }
