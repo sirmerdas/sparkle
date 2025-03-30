@@ -46,13 +46,15 @@ class PdoManager
     {
         try {
             $pdoStatement->execute($this->getQueryValue());
-            return $pdoStatement;
         } catch (Exception $e) {
             if (Manager::$fileLogger) {
                 Manager::$logger->error($e->getMessage(), ['trace' => $e->getTrace()]);
             }
-            throw new SqlExecuteException($e->getMessage());
+            if (!Manager::$failSilently) {
+                throw new SqlExecuteException($e->getMessage());
+            }
         }
+        return $pdoStatement;
     }
 
     /**
@@ -142,7 +144,9 @@ class PdoManager
             if (Manager::$fileLogger) {
                 Manager::$logger->error($e->getMessage(), ['trace' => $e->getTrace()]);
             }
-            throw new SqlExecuteException($e->getMessage());
+            if (!Manager::$failSilently) {
+                throw new SqlExecuteException($e->getMessage());
+            }
         }
     }
 
