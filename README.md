@@ -2,6 +2,12 @@
 
 # Sparkle – A Lightweight Database Abstraction Layer for PHP  
 
+<p align="center">
+<strong>For full documentation, visit <a href="https://sparkle.sirmerdas.ir">sparkle.sirmerdas.ir</a></strong>.
+</p>
+
+[![Latest Stable Version](http://poser.pugx.org/sirmerdas/sparkle/v)](https://packagist.org/packages/sirmerdas/sparkle) [![Total Downloads](http://poser.pugx.org/sirmerdas/sparkle/downloads)](https://packagist.org/packages/sirmerdas/sparkle) [![License](http://poser.pugx.org/sirmerdas/sparkle/license)](https://packagist.org/packages/sirmerdas/sparkle) [![PHP Version Require](http://poser.pugx.org/sirmerdas/sparkle/require/php)](https://packagist.org/packages/sirmerdas/sparkle)
+
 **Sparkle** is a simple yet expressive **Database Abstraction Layer (DAL)** for PHP, highly inspired by Laravel's **Eloquent**. However, unlike Eloquent, which is a full-fledged **Object-Relational Mapper (ORM)**, Sparkle is a lightweight **query builder** designed for direct interaction with **PDO** while keeping things minimal and efficient.  
 
 If you love **Eloquent's fluent syntax** but need something **lighter and more flexible**, Sparkle is the perfect fit.  
