@@ -292,13 +292,13 @@ class Builder extends PdoManager
      *
      * @param string $targetTable The name of the table to join with.
      * @param string $leftColumn The column from the current table to use in the join condition.
-     * @param string $operator The operator to use in the join condition (e.g., '=', '<', '>').
+     * @param ComparisonOperator $comparisonOperator The operator to use for comparison (e.g., '=', '>', '<').
      * @param string $rightColumn The column from the target table to use in the join condition.
      * @param JoinType $joinType The type of join to perform (e.g., INNER, LEFT, RIGHT). Defaults to INNER.
      */
-    public function join(string $targetTable, string $leftColumn, string $operator, string $rightColumn, JoinType $joinType = JoinType::INNER): self
+    public function join(string $targetTable, string $leftColumn, ComparisonOperator $comparisonOperator, string $rightColumn, JoinType $joinType = JoinType::INNER): self
     {
-        $this->joins[] = "{$joinType->value} JOIN `$targetTable` ON $leftColumn $operator $rightColumn";
+        $this->joins[] = "{$joinType->value} JOIN `$targetTable` ON $leftColumn {$comparisonOperator->value} $rightColumn";
         return $this;
     }
 
