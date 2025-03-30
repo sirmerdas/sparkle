@@ -327,13 +327,15 @@ class Builder extends PdoManager
         $prepareStatement = $this->pdoPrepare($query);
         try {
             $prepareStatement->execute($params);
-            return $prepareStatement->fetchAll(PDO::FETCH_OBJ);
         } catch (Exception $e) {
             if (Manager::$fileLogger) {
                 Manager::$logger->error($e->getMessage(), ['trace' => $e->getTrace()]);
             }
-            throw new SqlExecuteException($e->getMessage());
+            if (!Manager::$failSilently) {
+                throw new SqlExecuteException($e->getMessage());
+            }
         }
+        return $prepareStatement->fetchAll(PDO::FETCH_OBJ);
     }
 
     /**
@@ -395,13 +397,15 @@ class Builder extends PdoManager
         $prepareStatement = $this->pdoPrepare($query);
         try {
             $prepareStatement->execute($params);
-            return intval($this->pdoLastInsertId());
         } catch (Exception $e) {
             if (Manager::$fileLogger) {
                 Manager::$logger->error($e->getMessage(), ['trace' => $e->getTrace()]);
             }
-            throw new SqlExecuteException($e->getMessage());
+            if (!Manager::$failSilently) {
+                throw new SqlExecuteException($e->getMessage());
+            }
         }
+        return intval($this->pdoLastInsertId());
     }
 
     /**
@@ -443,13 +447,15 @@ class Builder extends PdoManager
         $prepareStatement = $this->pdoPrepare($query);
         try {
             $prepareStatement->execute($params);
-            return $prepareStatement->rowCount();
         } catch (Exception $e) {
             if (Manager::$fileLogger) {
                 Manager::$logger->error($e->getMessage(), ['trace' => $e->getTrace()]);
             }
-            throw new SqlExecuteException($e->getMessage());
+            if (!Manager::$failSilently) {
+                throw new SqlExecuteException($e->getMessage());
+            }
         }
+        return $prepareStatement->rowCount();
     }
 
     /**
@@ -481,13 +487,15 @@ class Builder extends PdoManager
         $prepareStatement = $this->pdoPrepare($query);
         try {
             $prepareStatement->execute($params);
-            return $prepareStatement->rowCount();
         } catch (Exception $e) {
             if (Manager::$fileLogger) {
                 Manager::$logger->error($e->getMessage(), ['trace' => $e->getTrace()]);
             }
-            throw new SqlExecuteException($e->getMessage());
+            if (!Manager::$failSilently) {
+                throw new SqlExecuteException($e->getMessage());
+            }
         }
+        return $prepareStatement->rowCount();
     }
 
 
@@ -519,17 +527,19 @@ class Builder extends PdoManager
         $pdoStatement = $this->pdoPrepare($query);
         try {
             $pdoStatement->execute($params);
-            return [
-                'items' => $pdoStatement->fetchAll(PDO::FETCH_OBJ),
-                'rowCount' => $pdoStatement->rowCount(),
-                'lastInsertId' => $this->pdoLastInsertId(),
-            ];
         } catch (Exception $e) {
             if (Manager::$fileLogger) {
                 Manager::$logger->error($e->getMessage(), ['trace' => $e->getTrace()]);
             }
-            throw new SqlExecuteException($e->getMessage());
+            if (!Manager::$failSilently) {
+                throw new SqlExecuteException($e->getMessage());
+            }
         }
+        return [
+            'items' => $pdoStatement->fetchAll(PDO::FETCH_OBJ),
+            'rowCount' => $pdoStatement->rowCount(),
+            'lastInsertId' => $this->pdoLastInsertId(),
+        ];
     }
 
     /**

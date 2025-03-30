@@ -33,7 +33,12 @@ class Manager
      */
     public static bool $fileLogger = false;
 
-    public function __construct(string|null $logPath = null)
+    /**
+     * Determines whether errors should be suppressed instead of throwing exceptions.
+     */
+    public static bool $failSilently;
+
+    public function __construct(string|null $logPath = null, bool $failSilently = false)
     {
         if ($logPath !== null && is_string($logPath) && is_string($logPath)) {
             static::$fileLogger = true;
@@ -43,6 +48,7 @@ class Manager
                 static::$logger = $logger;
             }
         }
+        static::$failSilently = $failSilently;
     }
 
 
