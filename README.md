@@ -6,7 +6,7 @@
 
 If you love **Eloquent's fluent syntax** but need something **lighter and more flexible**, Sparkle is the perfect fit.  
 
-## Features  
+## 🔥 Features  
 
 ✅ **Fluent Query Builder** – Write queries effortlessly using a clean and expressive syntax.  
 ✅ **Lightweight & Fast** – No heavy ORM, just raw performance with a structured API.  
@@ -16,7 +16,7 @@ If you love **Eloquent's fluent syntax** but need something **lighter and more f
 ✅ **Raw Queries** – Run custom SQL queries with parameter binding.  
 ✅ **Flexible & Extensible** – Easily integrates into any PHP project.  
 
-## Installation  
+## 🚀Installation  
 
 You can install Sparkle via Composer:  
 
