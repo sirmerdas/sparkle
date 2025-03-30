@@ -1,3 +1,5 @@
+![Sparkle](./img/banner.jpg)
+
 # Sparkle – A Lightweight Database Abstraction Layer for PHP  
 
 **Sparkle** is a simple yet expressive **Database Abstraction Layer (DAL)** for PHP, highly inspired by Laravel's **Eloquent**. However, unlike Eloquent, which is a full-fledged **Object-Relational Mapper (ORM)**, Sparkle is a lightweight **query builder** designed for direct interaction with **PDO** while keeping things minimal and efficient.  
