@@ -12,6 +12,7 @@ use Monolog\Handler\StreamHandler;
 use Monolog\Level;
 use Monolog\Logger;
 use PDO;
+use Exception;
 use Sirmerdas\Sparkle\{Enums\Database, Exceptions\ConnectionException};
 
 class Manager
@@ -94,7 +95,7 @@ class Manager
         try {
             $selectedConnection = static::$connections[$connectionName];
             static::$connection = new PDO($selectedConnection['dsn'], $selectedConnection['username'], $selectedConnection['password'], $selectedConnection['pdoOptions']);
-        } catch (ConnectionException $e) {
+        } catch (Exception $e) {
             if (static::$fileLogger) {
                 static::$logger->critical($e->getMessage(), ['trace' => $e->getTrace(), 'prev' => $e->getPrevious()]);
             }
