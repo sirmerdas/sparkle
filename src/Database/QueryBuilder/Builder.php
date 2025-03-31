@@ -164,9 +164,6 @@ class Builder extends PdoManager
     /**
      * Adds a WHERE clause to the query.
      *
-     * This method allows you to specify a condition for filtering results
-     * based on a column, a comparison operator, and a value.
-     *
      * @param string $column The name of the column to apply the condition on.
      * @param ComparisonOperator $comparisonOperator The operator to use for comparison (e.g., '=', '>', '<').
      * @param string $value The value to compare the column against.
@@ -182,9 +179,6 @@ class Builder extends PdoManager
 
     /**
      * Adds an "OR WHERE" condition to the query.
-     *
-     * This method appends a condition to the query using the logical "OR" operator.
-     * It allows specifying a column, a comparison operator, and a value to filter the results.
      *
      * @param string $column The name of the column to apply the condition on.
      * @param ComparisonOperator $comparisonOperator The comparison operator to use (e.g., '=', '!=', '<', '>').
@@ -243,10 +237,6 @@ class Builder extends PdoManager
     /**
      * Adds an "WHERE NOT IN" clause to the query.
      *
-     * This method appends a condition to the query that checks if the values
-     * in the specified column are not within the given array of values, using
-     * an "OR" logical operator.
-     *
      * @param string $column The name of the column to apply the condition to.
      * @param array $values An array of values to exclude from the column.
      */
@@ -260,10 +250,6 @@ class Builder extends PdoManager
 
     /**
      * Adds an "OR WHERE NOT IN" clause to the query.
-     *
-     * This method appends a condition to the query that checks if the values
-     * in the specified column are not within the given array of values, using
-     * an "OR" logical operator.
      *
      * @param string $column The name of the column to apply the condition to.
      * @param array $values An array of values to exclude from the column.
